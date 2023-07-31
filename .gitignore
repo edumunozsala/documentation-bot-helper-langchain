@@ -132,3 +132,4 @@ dmypy.json
 
 # Langchain documentation
 langchain-docs/
+huggingface-docs/
