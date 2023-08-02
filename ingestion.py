@@ -1,5 +1,8 @@
 import os
 from langchain.document_loaders import ReadTheDocsLoader
+from langchain.document_loaders import PyPDFLoader
+from langchain.document_loaders import PyPDFDirectoryLoader
+
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Pinecone, Chroma, Milvus
@@ -40,18 +43,44 @@ def milvus_embedding(documents):
     db = Milvus.from_documents(documents, embeddings, connection_args={"host": "127.0.0.1", "port": "19530"})
     print("****** Added to Milvus vectorstore vectors")
     
-    
-def ingest_docs() -> None:
-    # Set the path to the documentation folder
-    doc_path= "langchain-docs\\langchain-docs\\python.langchain.com\\en\\latest\\getting_started"
+def load_docs_from_path(doc_path, encoding="ISO-8859-1"):
     # Create a loader with the documentation
-    loader = ReadTheDocsLoader(path=doc_path, encoding="ISO-8859-1")
+    loader = ReadTheDocsLoader(path=doc_path, encoding=encoding)
     # Load the documents
     raw_documents = loader.load()
+    # Show count 
     print(f"loaded {len(raw_documents) }documents")
+    return raw_documents
+    
+def load_docs_from_pdfs(doc_path):
+    #Check if doc_path is a directory
+    if os.path.isdir(doc_path):
+        # Create a loader with the documentation
+        loader = PyPDFDirectoryLoader(path=doc_path)
+        # Load the documents
+    else:
+        # Create a loader with the documentation
+        loader = PyPDFLoader(path=doc_path)
+        
+    # Load the documents
+    raw_documents = loader.load()
+    # Show count 
+    print(f"loaded {len(raw_documents) }documents")
+    return raw_documents
+    
+def ingest_docs(raw_documents) -> None:
+    # Set the path to the documentation folder
+    #doc_path= "langchain-docs\\langchain-docs\\python.langchain.com\\en\\latest\\getting_started"
+    # Read the docs
+    #raw_documents = load_docs_from_path(doc_path, encoding="ISO-8859-1")
+    # Create a loader with the documentation
+    #loader = ReadTheDocsLoader(path=doc_path, encoding="ISO-8859-1")
+    # Load the documents
+    #raw_documents = loader.load()
+    #print(f"loaded {len(raw_documents) }documents")
     # Split the documents in chunks of 1000 characters with 100 overlap
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000, chunk_overlap=100, separators=["\n\n", "\n", " ", ""]
+        chunk_size=800, chunk_overlap=100, separators=["\n\n", "\n", " ", ""]
     )
     documents = text_splitter.split_documents(documents=raw_documents)
     print(f"Splitted into {len(documents)} chunks")
@@ -77,7 +106,14 @@ if __name__ == "__main__":
     persist_directory=VECTORDB_DIR
     # Create the Pinecone index
     create_pinecone_index(VECTOR_SIZE)
+    # Set the path to the documentation folder
+    #doc_path= "langchain-docs\\langchain-docs\\python.langchain.com\\en\\latest\\getting_started"
+    doc_path= "pdf"
+    # Read the docs
+    #raw_documents = load_docs_from_path(doc_path, encoding="ISO-8859-1")
+    # Read the docs from PDFs
+    raw_documents = load_docs_from_pdfs(doc_path)
     # Ingest the documents
-    documents = ingest_docs()
+    documents = ingest_docs(raw_documents)
     # Embedding the documents
-    pinecone_embedding(documents)
+    #pinecone_embedding(documents)
