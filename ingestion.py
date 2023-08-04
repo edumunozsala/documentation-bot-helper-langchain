@@ -1,4 +1,5 @@
 import os
+
 from langchain.document_loaders import ReadTheDocsLoader
 from langchain.document_loaders import PyPDFLoader
 from langchain.document_loaders import PyPDFDirectoryLoader
@@ -6,8 +7,9 @@ from langchain.document_loaders import PyPDFDirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from dotenv import load_dotenv
 
-from constants import INDEX_NAME, VECTORDB_DIR, VECTOR_SIZE, METRIC
+from constants import INDEX_NAME, VECTORDB_DIR, VECTOR_SIZE, METRIC, VECTORDB, DATABASE_PATH
 from utils.pinecone import init_connection, create_pinecone_index, pinecone_embedding
+from utils.deeplake import deeplake_embedding
 
    
 def load_docs_from_path(doc_path, encoding="ISO-8859-1"):
@@ -49,18 +51,12 @@ def ingest_docs(raw_documents) -> None:
         doc.metadata.update({"source": new_url})
 
     return documents
-    
+
 
 if __name__ == "__main__":
     # Load the environment variables
     load_dotenv()
-    # Initialize the Pinecone connection    
-    init_connection(os.environ["PINECONE_API_KEY"], os.environ["PINECONE_ENVIRONMENT_REGION"])
-    # For persisting purpose the vectors in a directory
-    # Not necessary when working with Pinecone
-    persist_directory=VECTORDB_DIR
-    # Create the Pinecone index
-    create_pinecone_index(VECTOR_SIZE, metric=METRIC, index_name=INDEX_NAME)
+    
     # Set the path to the documentation folder
     #doc_path= "langchain-docs\\langchain-docs\\python.langchain.com\\en\\latest\\getting_started"
     doc_path= "pdf"
@@ -70,5 +66,17 @@ if __name__ == "__main__":
     raw_documents = load_docs_from_pdfs(doc_path)
     # Ingest the documents
     documents = ingest_docs(raw_documents)
-    # Embedding the documents
-    pinecone_embedding(documents, INDEX_NAME)
+    # Select the vector store    
+    if VECTORDB=="Pinecone":
+        # Initialize the Pinecone connection    
+        init_connection(os.environ["PINECONE_API_KEY"], os.environ["PINECONE_ENVIRONMENT_REGION"])
+        # For persisting purpose the vectors in a directory
+        # Not necessary when working with Pinecone
+        persist_directory=VECTORDB_DIR
+        # Create the Pinecone index
+        create_pinecone_index(VECTOR_SIZE, metric=METRIC, index_name=INDEX_NAME)
+        # Embedding the documents
+        pinecone_embedding(documents, INDEX_NAME)        
+    elif VECTORDB=="DeepLake":
+        # Create the DeepLake vectorstore
+        deeplake_embedding(documents, DATABASE_PATH, os.environ["ACTIVELOOP_TOKEN"])
