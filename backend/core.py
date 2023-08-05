@@ -12,7 +12,7 @@ from constants import INDEX_NAME, VECTORDB, DATABASE_PATH
 from utils.pinecone import init_connection
 
 
-def run_chroma_qa(query: str, vectordir, top_k) -> Any:
+def run_chroma_qa(query: str, vectordir: str, top_k: int) -> Any:
     embeddings = OpenAIEmbeddings()
     docsearch = Chroma(persist_directory=vectordir, embedding_function=embeddings)
     
@@ -25,7 +25,7 @@ def run_chroma_qa(query: str, vectordir, top_k) -> Any:
     )
     return qa({"query": query})
 
-def run_pinecone_qa(query: str, index_name, top_k) -> Any:
+def run_pinecone_qa(query: str, index_name: str, top_k: int) -> Any:
     embeddings = OpenAIEmbeddings()
     docsearch = Pinecone.from_existing_index(
         index_name=index_name, embedding=embeddings
@@ -41,7 +41,7 @@ def run_pinecone_qa(query: str, index_name, top_k) -> Any:
     )
     return qa({"query": query})
 
-def run_deeplake_qa(query: str, dataset_path, top_k) -> Any:
+def run_deeplake_qa(query: str, dataset_path: str, top_k: int) -> Any:
     embeddings = OpenAIEmbeddings()
     docsearch = DeepLake(dataset_path=dataset_path, embedding_function=embeddings, read_only=True)
     
@@ -55,7 +55,7 @@ def run_deeplake_qa(query: str, dataset_path, top_k) -> Any:
     )
     return qa({"query": query})
 
-def run_pinecone_conversational(query: str, index_name, top_k, chat_history: List[Dict[str, Any]] = []) -> Any:
+def run_pinecone_conversational(query: str, index_name: str, top_k: int , chat_history: List[Dict[str, Any]] = []) -> Any:
     embeddings = OpenAIEmbeddings()
     docsearch = Pinecone.from_existing_index(
         index_name=index_name, embedding=embeddings
@@ -68,7 +68,7 @@ def run_pinecone_conversational(query: str, index_name, top_k, chat_history: Lis
 
     return qa({"question": query, "chat_history": chat_history})
 
-def run_deeplake_conversational(query: str, dataset_path, top_k, chat_history: List[Dict[str, Any]] = []) -> Any:
+def run_deeplake_conversational(query: str, dataset_path: str, top_k: int, chat_history: List[Dict[str, Any]] = []) -> Any:
     embeddings = OpenAIEmbeddings()
     docsearch = DeepLake(dataset_path=dataset_path, embedding_function=embeddings, read_only=True)
     
