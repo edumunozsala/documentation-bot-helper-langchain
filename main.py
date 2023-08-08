@@ -17,6 +17,8 @@ def clear_text():
     
 # Set a tittle for the app
 st.header("Documentation Question-Aswering Bot")
+st.title("Interact with your PDFs")
+st.subheader('Load your PDF or downloaded documentation, ask questions, and receive answers directly from the document.')
 
 
 prompt = st.text_input("Prompt",  value="", key="Prompt", placeholder="Enter your prompt here..")
@@ -36,7 +38,7 @@ def create_sources_string(source_urls: Set[str]) -> str:
         return ""
     sources_list = list(source_urls)
     sources_list.sort()
-    sources_string = "sources:\n"
+    sources_string = ""
     for i, source in enumerate(sources_list):
         sources_string += f"{i+1}. {source}\n"
     return sources_string
@@ -57,7 +59,8 @@ if prompt:
         )
         # Format the response
         formatted_response = (
-            f"{generated_response['answer']} \n\n {create_sources_string(sources)}"
+            #f"{generated_response['answer']} \n\n {create_sources_string(sources)}"
+            f"{generated_response['answer']} \n\n"
         )
 
         st.session_state["user_prompt_history"].append(prompt)
@@ -70,3 +73,12 @@ if st.session_state["chat_answers_history"]:
     for generated_response, user_query in zip(st.session_state["chat_answers_history"], st.session_state["user_prompt_history"]):
         message(user_query, is_user=True)
         message(generated_response)
+        # With a streamlit expander  
+        with st.expander('Memory:'):
+            # Write out the relevant pages
+            st.write(st.session_state["chat_history"])
+
+        # With a streamlit expander  
+        with st.expander('Sources:'):
+            # Write out the relevant pages
+            st.write(create_sources_string(sources))
