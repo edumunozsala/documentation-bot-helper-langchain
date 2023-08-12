@@ -79,7 +79,7 @@ load_dotenv()
 # Set a tittle for the app
 st.title("Question-Answering Chatbot with Memory 🧠 ")
 st.header("Interact with your PDF documents 📜 using a Question-Answering Chatbot 🤖")
-st.subheader('Load a PDF document and ask it questions')
+#st.subheader('Load a PDF document and ask it questions')
 
 # Set up the sidebar
 st.sidebar.markdown(
@@ -93,91 +93,97 @@ st.sidebar.markdown(
     """
 )
 
-# Upload PDF file
-uploaded_file = st.file_uploader("**Upload Your PDF File**", type=["pdf"], accept_multiple_files= ACCEPT_MULTIPLE_FILES)
+if "disabled" not in st.session_state:
+    st.session_state["disabled"] = False
 
-if uploaded_file:
-    # Check if uploaded_fle is a string
-    # if not ACCEPT_MULTIPLE_FILES:
-    #     # Convert the string to a list
-    #     uploaded_file = [uploaded_file]
-    # # Check if the uploaded_file is an empty list
-    # if not uploaded_file:
-    #     st.error("Please upload a PDF file")
-    #     st.stop()
+def disable():
+    st.session_state["disabled"] = True
+    
+# OpenAI API
+api = st.text_input(
+    "**Enter OpenAI API Key**",
+    type="password",
+    placeholder="sk-",
+    help="https://platform.openai.com/account/api-keys",
+    key="api",
+    )
+
+if api:
+    # Update the  OpenAI API key in the environment variables
+    os.environ["OPENAI_API_KEY"] = api
+    
+    # Upload PDF file
+    uploaded_file = st.file_uploader("**Upload Your PDF File**", type=["pdf"], accept_multiple_files= ACCEPT_MULTIPLE_FILES,disabled=st.session_state.disabled, 
+                                    #on_change=disable,
+                                    key="uploader")
+    st.info(uploaded_file)
+    
+    if uploaded_file:
+        # Disable the file  uploader
         
-    # Parse the uploaded PDF files
-    chunks = parse_pdf_files(uploaded_file)
-    # Create the DeepLake vectorstore
-    deeplake_embedding(chunks, DATABASE_PATH, os.environ["ACTIVELOOP_TOKEN"])
-        
-    # Ask for t paper to chat with
-    prompt = st.text_input("Prompt",  value="", placeholder="Enter your prompt here..")
-    # # Set the paper in the session state 
-    # if "user_paper" not in st.session_state:
-    #     st.session_state["user_paper"] = []
+        # Check if uploaded_fle is a string
+        # if not ACCEPT_MULTIPLE_FILES:
+        #     # Convert the string to a list
+        #     uploaded_file = [uploaded_file]
+        # # Check if the uploaded_file is an empty list
+        # if not uploaded_file:
+        #     st.error("Please upload a PDF file")
+        #     st.stop()
+            
+        # Parse the uploaded PDF files
+        chunks = parse_pdf_files(uploaded_file)
+        # Create the DeepLake vectorstore
+        deeplake_embedding(chunks, DATABASE_PATH, os.environ["ACTIVELOOP_TOKEN"])
+            
+        # Ask for t paper to chat with
+        prompt = st.text_input("Prompt",  value="", placeholder="Enter your prompt here..", key="prompt")
 
-    # if paper:
-        
-    # prompt = st.text_input("Prompt",  value="", key="Prompt", placeholder="Enter your prompt here..")
+        if "user_prompt_history" not in st.session_state:
+            st.session_state["user_prompt_history"] = []
 
-    if "user_prompt_history" not in st.session_state:
-        st.session_state["user_prompt_history"] = []
+        if "chat_answers_history" not in st.session_state:
+            st.session_state["chat_answers_history"] = []
 
-    if "chat_answers_history" not in st.session_state:
-        st.session_state["chat_answers_history"] = []
-
-    if "chat_history" not in st.session_state:
-        st.session_state["chat_history"] = []
-
-
-    # def create_sources_string(source_urls: Set[str]) -> str:
-    #     if not source_urls:
-    #         return ""
-    #     sources_list = list(source_urls)
-    #     sources_list.sort()
-    #     sources_string = ""
-    #     for i, source in enumerate(sources_list):
-    #         sources_string += f"{i+1}. {source}\n"
-    #     return sources_string
+        if "chat_history" not in st.session_state:
+            st.session_state["chat_history"] = []
 
 
-    if prompt:
-        with st.spinner("Generating response.."):
-            # Check the vector database to  use
-            if VECTORDB=="DeepLake":
-                # Run the LLM on the DeepLake vector database
-                generated_response = run_deeplake_conversational(query=prompt, dataset_path=DATABASE_PATH, top_k=2,chat_history=st.session_state["chat_history"])
-            elif VECTORDB=="Pinecone":
-                # Run the LLM on the Pinecone vector database
-                generated_response = run_pinecone_conversational(query=prompt, index_name=INDEX_NAME, top_k=2,chat_history=st.session_state["chat_history"])
-            # Read the source document from the metadata in the response
-            sources = set(
-                [doc.metadata["source"] for doc in generated_response["source_documents"]]
-            )
-            # Format the response
-            formatted_response = (
-                #f"{generated_response['answer']} \n\n {create_sources_string(sources)}"
-                f"{generated_response['answer']} \n\n"
-            )
+        if prompt:
+            with st.spinner("Generating response.."):
+                # Check the vector database to  use
+                if VECTORDB=="DeepLake":
+                    # Run the LLM on the DeepLake vector database
+                    generated_response = run_deeplake_conversational(query=prompt, dataset_path=DATABASE_PATH, top_k=2,chat_history=st.session_state["chat_history"])
+                elif VECTORDB=="Pinecone":
+                    # Run the LLM on the Pinecone vector database
+                    generated_response = run_pinecone_conversational(query=prompt, index_name=INDEX_NAME, top_k=2,chat_history=st.session_state["chat_history"])
+                # Read the source document from the metadata in the response
+                sources = set(
+                    [doc.metadata["source"] for doc in generated_response["source_documents"]]
+                )
+                # Format the response
+                formatted_response = (
+                    #f"{generated_response['answer']} \n\n {create_sources_string(sources)}"
+                    f"{generated_response['answer']} \n\n"
+                )
 
-            st.session_state["user_prompt_history"].append(prompt)
-            st.session_state["chat_answers_history"].append(formatted_response)
-            st.session_state["chat_history"].append((prompt, generated_response["answer"]))
-    #         # Clean the input prompt
-    #         # clear_text()
+                st.session_state["user_prompt_history"].append(prompt)
+                st.session_state["chat_answers_history"].append(formatted_response)
+                st.session_state["chat_history"].append((prompt, generated_response["answer"]))
+        #         # Clean the input prompt
+        #         # clear_text()
 
-        if st.session_state["chat_answers_history"]:
-            for generated_response, user_query in zip(st.session_state["chat_answers_history"], st.session_state["user_prompt_history"]):
-                message(user_query, is_user=True, key="query")
-                message(generated_response,key="response")
+            if st.session_state["chat_answers_history"]:
+                for generated_response, user_query in zip(st.session_state["chat_answers_history"], st.session_state["user_prompt_history"]):
+                    message(user_query, is_user=True,)
+                    message(generated_response,)
 
-                # With a streamlit expander  
-                with st.expander('Sources:'):
-                    # Write out the relevant pages
-                    st.write(create_sources_string(sources))
+                    # With a streamlit expander  
+                    with st.expander('Sources:'):
+                        # Write out the relevant pages
+                        st.write(create_sources_string(sources))
 
-                # With a streamlit expander  
-                with st.expander('Memory:'):
-                    # Write out the relevant pages
-                    st.write(st.session_state["chat_history"])
+                    # With a streamlit expander  
+                    with st.expander('Memory:'):
+                        # Write out the relevant pages
+                        st.write(st.session_state["chat_history"])

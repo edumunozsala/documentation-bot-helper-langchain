@@ -2,8 +2,6 @@
 import streamlit as st
 
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.vectorstores import Pinecone
-
 from langchain.vectorstores import DeepLake
 
 @st.cache_data
