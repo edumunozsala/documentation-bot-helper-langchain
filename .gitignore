@@ -129,3 +129,8 @@ dmypy.json
 .pyre/
 # VS Code Settings
 .vscode
+
+# Langchain documentation
+langchain-docs/
+huggingface-docs/
+pdf/
