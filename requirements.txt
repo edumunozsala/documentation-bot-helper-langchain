@@ -2,5 +2,3 @@ streamlit_chat
 langchain
 pypdf
 python-dotenv
-os
-re
