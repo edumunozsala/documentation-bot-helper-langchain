@@ -69,6 +69,12 @@ def create_sources_string(source_urls: Set[str]) -> str:
     for i, source in enumerate(sources_list):
         sources_string += f"{i+1}. {source}\n"
     return sources_string
+# Clean the chat history
+def clean_chat():
+    st.session_state["user_prompt_history"] = []
+    st.session_state["chat_answers_history"] = []
+    st.session_state["chat_history"] = []
+    st.session_state["disabled"] = True
 
 # Load the environment variables
 load_dotenv()
@@ -96,8 +102,12 @@ st.sidebar.markdown(
 if "disabled" not in st.session_state:
     st.session_state["disabled"] = False
 
-def disable():
-    st.session_state["disabled"] = True
+def clean_chat():
+    st.session_state["user_prompt_history"] = []
+    st.session_state["chat_answers_history"] = []
+    st.session_state["chat_history"] = []
+    prompt=None
+    #st.session_state["disabled"] = True
     
 # OpenAI API
 api = st.text_input(
@@ -114,9 +124,9 @@ if api:
     
     # Upload PDF file
     uploaded_file = st.file_uploader("**Upload Your PDF File**", type=["pdf"], accept_multiple_files= ACCEPT_MULTIPLE_FILES,disabled=st.session_state.disabled, 
-                                    #on_change=disable,
+                                    on_change=clean_chat,
                                     key="uploader")
-    st.info(uploaded_file)
+    #st.info(uploaded_file)
     
     if uploaded_file:
         # Disable the file  uploader
@@ -174,9 +184,11 @@ if api:
         #         # clear_text()
 
             if st.session_state["chat_answers_history"]:
-                for generated_response, user_query in zip(st.session_state["chat_answers_history"], st.session_state["user_prompt_history"]):
-                    message(user_query, is_user=True,)
-                    message(generated_response,)
+                for generated_response, user_query in zip(reversed(st.session_state["chat_answers_history"]), reversed(st.session_state["user_prompt_history"])):
+                    #message(user_query, is_user=True,)
+                    st.chat_message("user").write(user_query)
+                    #message(generated_response,)
+                    st.chat_message("assistant").write(generated_response)
 
                     # With a streamlit expander  
                     with st.expander('Sources:'):
