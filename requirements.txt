@@ -2,5 +2,5 @@ streamlit_chat
 langchain
 pypdf
 python-dotenv
-pinecone
+pinecone-client
 deeplake
