@@ -4,3 +4,4 @@ pypdf
 python-dotenv
 pinecone-client
 deeplake
+openai
