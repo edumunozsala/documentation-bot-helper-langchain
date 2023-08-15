@@ -1,7 +1,6 @@
 from typing import Set, List
 
 import streamlit as st
-from streamlit_chat import message
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pypdf import PdfReader
