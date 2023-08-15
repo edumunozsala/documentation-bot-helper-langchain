@@ -1,7 +1,7 @@
-streamlit_chat
 langchain
 pypdf
 python-dotenv
 pinecone-client
 deeplake
 openai
+tiktoken
