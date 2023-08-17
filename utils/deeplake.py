@@ -4,7 +4,7 @@ import streamlit as st
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import DeepLake
 
-#@st.cache_data
+@st.cache_resource
 def deeplake_embedding(_documents, dataset, token):
     print(f"Going to insert {len(_documents)} to DeepLake")
     # Create the embeddings
