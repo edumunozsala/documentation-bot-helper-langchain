@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 
 
 # Clean a PDF page
+@st.cache_data
 def clean_page(page: str) -> str:
     # Merge hyphenated words
     page = re.sub(r"(\w+)-\n(\w+)", r"\1\2", page)
@@ -30,6 +31,7 @@ def clean_page(page: str) -> str:
 # Read and return the cleaned pages of the given PDF files
 @st.cache_data
 def parse_pdf_files(pdf_files) -> List[str]:
+        print("Parsing PDF file")
         doc_chunks = []    
     #for pdf in pdf_files:
         # Read the PDF file
@@ -58,7 +60,8 @@ def parse_pdf_files(pdf_files) -> List[str]:
                 doc_chunks.append(doc)
 
         return doc_chunks
-
+    
+@st.cache_data
 def create_sources_string(source_urls: Set[str]) -> str:
     if not source_urls:
         return ""
@@ -68,6 +71,7 @@ def create_sources_string(source_urls: Set[str]) -> str:
     for i, source in enumerate(sources_list):
         sources_string += f"{i+1}. {source}\n"
     return sources_string
+
 # Clean the chat history
 def clean_chat():
     st.session_state["user_prompt_history"] = []
@@ -138,11 +142,11 @@ if api:
         # if not uploaded_file:
         #     st.error("Please upload a PDF file")
         #     st.stop()
-            
-        # Parse the uploaded PDF files
-        chunks = parse_pdf_files(uploaded_file)
-        # Create the DeepLake vectorstore
-        deeplake_embedding(chunks, DATABASE_PATH, os.environ["ACTIVELOOP_TOKEN"])
+        with st.spinner("Generating and uploading embeddings.."):            
+            # Parse the uploaded PDF files
+            chunks = parse_pdf_files(uploaded_file)
+            # Create the DeepLake vectorstore
+            deeplake_embedding(chunks, DATABASE_PATH, os.environ["ACTIVELOOP_TOKEN"])
             
         # Ask for t paper to chat with
         prompt = st.text_input("Prompt",  value="", placeholder="Enter your prompt here..", key="prompt")
