@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 
 
 # Clean a PDF page
-@st.cache_data
+#@st.cache_data
 def clean_page(page: str) -> str:
     # Merge hyphenated words
     page = re.sub(r"(\w+)-\n(\w+)", r"\1\2", page)
@@ -29,7 +29,7 @@ def clean_page(page: str) -> str:
     return page
 
 # Read and return the cleaned pages of the given PDF files
-@st.cache_data
+#@st.cache_data
 def parse_pdf_files(pdf_files) -> List[str]:
         print("Parsing PDF file")
         doc_chunks = []    
@@ -61,7 +61,7 @@ def parse_pdf_files(pdf_files) -> List[str]:
 
         return doc_chunks
     
-@st.cache_data
+#@st.cache_data
 def create_sources_string(source_urls: Set[str]) -> str:
     if not source_urls:
         return ""
@@ -146,7 +146,7 @@ if api:
             # Parse the uploaded PDF files
             chunks = parse_pdf_files(uploaded_file)
             # Create the DeepLake vectorstore
-            deeplake_embedding(chunks, DATABASE_PATH, os.environ["ACTIVELOOP_TOKEN"])
+            db= deeplake_embedding(chunks, DATABASE_PATH, os.environ["ACTIVELOOP_TOKEN"])
             
         # Ask for t paper to chat with
         prompt = st.text_input("Prompt",  value="", placeholder="Enter your prompt here..", key="prompt")
