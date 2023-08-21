@@ -15,7 +15,6 @@ from dotenv import load_dotenv
 
 
 # Clean a PDF page
-#@st.cache_data
 def clean_page(page: str) -> str:
     # Merge hyphenated words
     page = re.sub(r"(\w+)-\n(\w+)", r"\1\2", page)
@@ -29,7 +28,6 @@ def clean_page(page: str) -> str:
     return page
 
 # Read and return the cleaned pages of the given PDF files
-#@st.cache_data
 def parse_pdf_files(pdf_files) -> List[str]:
         print("Parsing PDF file")
         doc_chunks = []    
@@ -61,7 +59,6 @@ def parse_pdf_files(pdf_files) -> List[str]:
 
         return doc_chunks
     
-#@st.cache_data
 def create_sources_string(source_urls: Set[str]) -> str:
     if not source_urls:
         return ""
@@ -88,7 +85,6 @@ load_dotenv()
 # Set a tittle for the app
 st.title("Question-Answering Chatbot with Memory 🧠 ")
 st.header("Interact with your PDF documents 📜 using a Question-Answering Chatbot 🤖")
-#st.subheader('Load a PDF document and ask it questions')
 
 # Set up the sidebar
 st.sidebar.markdown(
@@ -126,22 +122,13 @@ if api:
     os.environ["OPENAI_API_KEY"] = api
     
     # Upload PDF file
-    uploaded_file = st.file_uploader("**Upload Your PDF File**", type=["pdf"], accept_multiple_files= ACCEPT_MULTIPLE_FILES,disabled=st.session_state.disabled, 
+    uploaded_file = st.sidebar.file_uploader("**Upload Your PDF File**", type=["pdf"], accept_multiple_files= ACCEPT_MULTIPLE_FILES,disabled=st.session_state.disabled, 
                                     on_change=clean_chat,
                                     key="uploader")
-    #st.info(uploaded_file)
     
     if uploaded_file:
         # Disable the file  uploader
         
-        # Check if uploaded_fle is a string
-        # if not ACCEPT_MULTIPLE_FILES:
-        #     # Convert the string to a list
-        #     uploaded_file = [uploaded_file]
-        # # Check if the uploaded_file is an empty list
-        # if not uploaded_file:
-        #     st.error("Please upload a PDF file")
-        #     st.stop()
         with st.spinner("Generating and uploading embeddings.."):            
             # Parse the uploaded PDF files
             chunks = parse_pdf_files(uploaded_file)
@@ -188,9 +175,7 @@ if api:
 
             if st.session_state["chat_answers_history"]:
                 for generated_response, user_query in zip(reversed(st.session_state["chat_answers_history"]), reversed(st.session_state["user_prompt_history"])):
-                    #message(user_query, is_user=True,)
                     st.chat_message("user").write(user_query)
-                    #message(generated_response,)
                     st.chat_message("assistant").write(generated_response)
 
                     # With a streamlit expander  
