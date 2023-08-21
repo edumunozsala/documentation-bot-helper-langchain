@@ -15,4 +15,4 @@ def deeplake_embedding(_documents, dataset, token):
     #DeepLake.from_documents(docs, dataset_path="./my_deeplake/", embedding=embeddings, overwrite=True)
     db = DeepLake.from_documents(_documents, dataset_path=dataset, embedding=embeddings, overwrite=True) #, token=token)
     print("****** Added to DeepLake vectorstore vectors")
-    return db
+    #return db

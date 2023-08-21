@@ -29,7 +29,7 @@ def clean_page(page: str) -> str:
     return page
 
 # Read and return the cleaned pages of the given PDF files
-@st.cache_data
+#@st.cache_data
 def parse_pdf_files(pdf_files) -> List[str]:
         print("Parsing PDF file")
         doc_chunks = []    
