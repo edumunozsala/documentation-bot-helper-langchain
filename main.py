@@ -97,6 +97,8 @@ st.sidebar.markdown(
     **Note : File content and API key not stored in any form.**
     """
 )
+# Select the top-k value
+top_k = st.sidebar.slider("Number of Top Hits Generated",min_value=1,max_value=5,value=3)
 
 if "disabled" not in st.session_state:
     st.session_state["disabled"] = False
@@ -153,10 +155,10 @@ if api:
                 # Check the vector database to  use
                 if VECTORDB=="DeepLake":
                     # Run the LLM on the DeepLake vector database
-                    generated_response = run_deeplake_conversational(query=prompt, dataset_path=DATABASE_PATH, top_k=2,chat_history=st.session_state["chat_history"])
+                    generated_response = run_deeplake_conversational(query=prompt, dataset_path=DATABASE_PATH, top_k=top_k,chat_history=st.session_state["chat_history"])
                 elif VECTORDB=="Pinecone":
                     # Run the LLM on the Pinecone vector database
-                    generated_response = run_pinecone_conversational(query=prompt, index_name=INDEX_NAME, top_k=2,chat_history=st.session_state["chat_history"])
+                    generated_response = run_pinecone_conversational(query=prompt, index_name=INDEX_NAME, top_k=top_k,chat_history=st.session_state["chat_history"])
                 # Read the source document from the metadata in the response
                 sources = set(
                     [doc.metadata["source"] for doc in generated_response["source_documents"]]
