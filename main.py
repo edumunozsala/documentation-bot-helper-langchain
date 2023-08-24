@@ -28,7 +28,7 @@ def clean_page(page: str) -> str:
     return page
 
 # Read and return the cleaned pages of the given PDF files
-def parse_pdf_files(pdf_files) -> List[str]:
+def parse_pdf_files(pdf_files, chunk_size=1000, chunk_overlap=50) -> List[str]:
         print("Parsing PDF file")
         doc_chunks = []    
     #for pdf in pdf_files:
@@ -38,9 +38,9 @@ def parse_pdf_files(pdf_files) -> List[str]:
 
         # Create the Text splitter
         text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=1500,
+                chunk_size=chunk_size,
                 separators=["\n\n", "\n", ".", "!", "?", ",", " ", ""],
-                chunk_overlap=50,
+                chunk_overlap=chunk_overlap,
                 )
         
         for i, page in enumerate(doc.pages):
@@ -83,20 +83,34 @@ load_dotenv()
 #     st.session_state["Prompt"] = ""
     
 # Set a tittle for the app
-st.title("Question-Answering Chatbot with Memory 🧠 ")
-st.header("Interact with your PDF documents 📜 using a Question-Answering Chatbot 🤖")
+st.title("RAG: Retrie and Rerank in semantic search")
+st.header("Interact with your PDF documents 📜 using a Question-Answering Chatbot 🤖 with Memory 🧠")
 
 # Set up the sidebar
 st.sidebar.markdown(
     """
     ### Steps:
-    1. Upload PDF File
-    2. Enter Your Secret Key for Embeddings
+    1. Enter your Secret API Key for Embeddings
+    2. Select your parameters
+    3. Upload PDF File
     3. Perform Q&A
 
     **Note : File content and API key not stored in any form.**
     """
 )
+# Set up the sidebar
+st.sidebar.markdown(
+    """
+    ### Select your parameters:
+    """
+)
+# Select the chunk size
+chunk_size = st.sidebar.slider("Chunk Size:",min_value=500,max_value=2000,value=1000)
+# Select the chunk overlap
+chunk_overlap = st.sidebar.slider("Chunk Overlap:",min_value=0,max_value=100,value=50)
+
+# Select the top-k value
+top_k = st.sidebar.slider("Number of Top Hits Generated",min_value=1,max_value=5,value=3)
 
 if "disabled" not in st.session_state:
     st.session_state["disabled"] = False
@@ -131,7 +145,7 @@ if api:
         
         with st.spinner("Generating and uploading embeddings.."):            
             # Parse the uploaded PDF files
-            chunks = parse_pdf_files(uploaded_file)
+            chunks = parse_pdf_files(uploaded_file, chunk_size, chunk_overlap)
             # Create the DeepLake vectorstore
             db= deeplake_embedding(chunks, DATABASE_PATH, os.environ["ACTIVELOOP_TOKEN"])
             
@@ -153,10 +167,10 @@ if api:
                 # Check the vector database to  use
                 if VECTORDB=="DeepLake":
                     # Run the LLM on the DeepLake vector database
-                    generated_response = run_deeplake_conversational(query=prompt, dataset_path=DATABASE_PATH, top_k=2,chat_history=st.session_state["chat_history"])
+                    generated_response = run_deeplake_conversational(query=prompt, dataset_path=DATABASE_PATH, top_k=top_k,chat_history=st.session_state["chat_history"])
                 elif VECTORDB=="Pinecone":
                     # Run the LLM on the Pinecone vector database
-                    generated_response = run_pinecone_conversational(query=prompt, index_name=INDEX_NAME, top_k=2,chat_history=st.session_state["chat_history"])
+                    generated_response = run_pinecone_conversational(query=prompt, index_name=INDEX_NAME, top_k=top_k,chat_history=st.session_state["chat_history"])
                 # Read the source document from the metadata in the response
                 sources = set(
                     [doc.metadata["source"] for doc in generated_response["source_documents"]]

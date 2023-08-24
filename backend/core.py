@@ -5,6 +5,8 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import RetrievalQA, ConversationalRetrievalChain
 from langchain.vectorstores import Pinecone, DeepLake, Chroma
+from langchain.retrievers.document_compressors import CohereRerank
+from langchain.retrievers import ContextualCompressionRetriever
 
 from dotenv import load_dotenv
 
@@ -70,12 +72,36 @@ def run_pinecone_conversational(query: str, index_name: str, top_k: int , chat_h
 
 def run_deeplake_conversational(query: str, dataset_path: str, top_k: int, chat_history: List[Dict[str, Any]] = []) -> Any:
     embeddings = OpenAIEmbeddings()
+    # Connect to the Deeplake vector database
     docsearch = DeepLake(dataset_path=dataset_path, embedding_function=embeddings, read_only=True)
-    
+    # Define the chat model
     chat = ChatOpenAI(model_name='gpt-3.5-turbo', verbose=True, temperature=0)
-
+    
+    # Create the chat chain
     qa = ConversationalRetrievalChain.from_llm(
         llm=chat, retriever=docsearch.as_retriever(search_type="similarity", search_kwargs={"k":top_k}), return_source_documents=True
+    )
+
+    return qa({"question": query, "chat_history": chat_history})
+
+def run_deeplake_conversational_rerank(query: str, dataset_path: str, top_k: int, chat_history: List[Dict[str, Any]] = []) -> Any:
+    embeddings = OpenAIEmbeddings()
+    # Connect to the Deeplake vector database
+    docsearch = DeepLake(dataset_path=dataset_path, embedding_function=embeddings, read_only=True)
+    # Define the chat model
+    chat = ChatOpenAI(model_name='gpt-3.5-turbo', verbose=True, temperature=0)
+    
+    # Create the retriever
+    retriever=docsearch.as_retriever(search_type="similarity", search_kwargs={"k":top_k})
+    
+    # Create the Reranker
+    compressor = CohereRerank()
+    compression_retriever = ContextualCompressionRetriever(
+                    base_compressor=compressor, base_retriever=retriever
+    )
+    # Create the chat chain
+    qa = ConversationalRetrievalChain.from_llm(
+        llm=chat, retriever=compression_retriever, return_source_documents=True
     )
 
     return qa({"question": query, "chat_history": chat_history})
