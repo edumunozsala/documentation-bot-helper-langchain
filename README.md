@@ -1,4 +1,5 @@
-# Develop a LLM powered Chatbot to chat with a PDF file using Langchain and Vector DB
+# RAG: Retrieve and Rerank
+## Develop a LLM powered Chatbot to chat with a PDF file using Langchain and Vector DB
 ## Description 
 
 We want to extract information from private data in the form of a PDF file. A chatbot interface is a user friendly approach and we need to apply a memory mechanism to keep track of the conversation and optimize how we interact with the Chatbot. To handle the amount of information that a pdf file can contain, we load all that information in a vector database, including the embedding vectors that compress that information.
